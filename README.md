@@ -9,7 +9,6 @@
 [![npm type definitions](https://img.shields.io/npm/types/typescript?color=orange&style=flat-square)](https://github.com/lsbFlying/resy/blob/master/src/index.ts)
 [![npm bundle size](https://img.shields.io/bundlephobia/minzip/resy?color=brightgreen&style=flat-square)](https://bundlephobia.com/result?p=resy)
 [![react](https://img.shields.io/badge/React-%3E%3D16.8.0-green.svg?style=flat-square)](https://img.shields.io/badge/React-%3E%3D16.0.0-green.svg?style=flat-square)
-[![npm](https://img.shields.io/npm/v/resy?color=blue&style=flat-square)](https://www.npmjs.com/package/resy)
 
 </div>
 
@@ -296,9 +295,9 @@ import { ComponentWithStore, PureComponentWithStore } from "resy";
  * PureComponentWithStore is inherited from React PureComponent;
  */
 class AppClass extends ComponentWithStore {
-
+  
   store = this.connectStore(store);
-
+  
   render() {
     const { count } = this.store;
     return (
@@ -311,9 +310,8 @@ class AppClass extends ComponentWithStore {
 }
 
 class PureAppClass extends PureComponentWithStore {
-
   store = this.connectStore(store);
-
+  
   render() {
     const { count } = this.store;
     return (
@@ -701,6 +699,12 @@ class AppClass extends ComponentWithStore {
 <details>
 <summary>useConciseState</summary>
 
+<p>
+  The functionality of useConciseState is not limited to just a concise syntax on the surface.
+Its deeper capability is to deconstruct the store and provide sub-components with a doorway
+that allows for comprehensive control over the store's data, rendering, updates, and subscriptions.
+</p>
+
 ```tsx
 import { useConciseState } from "resy";
 
@@ -769,6 +773,78 @@ function App() {
   );
 }
 ```
+
+#### Advantages of useConciseState
+
+```tsx
+import { useConciseState, ConciseStoreHeart } from "resy";
+
+type State = {
+  count: number;
+  text: string;
+};
+
+function ChildOne(props: ConciseStoreHeart<State>) {
+  const { store } = props;
+  const { count, text } = useStore(store);
+
+  return (
+    <>
+      <p>ChildOne-count:{count}</p>
+      <p>ChildOne-text:{text}</p>
+      <button
+        onClick={() => {
+          store.setState({
+            count: 999,
+            text: "ChildOneSetStateNewText",
+          });
+        }}
+      >
+        childOneBtn
+      </button>
+    </>
+  );
+}
+
+function ChildTwo(props: ConciseStoreHeart<State>) {
+  const { store } = props;
+  const [data, setData] = useState({ count: 0, text: "hello" });
+
+  store.useSubscription(({ nextState }) => {
+    setData(nextState);
+  });
+
+  return (
+    <>
+      <p>ChildTwo-count:{data.count}</p>
+      <p>ChildTwo-text:{data.text}</p>
+    </>
+  );
+}
+
+const App = () => {
+  const { count, text, store } = useConciseState<State>({
+    count: 0,
+    text: "hello",
+  });
+
+  return (
+    <>
+      <p>{count}</p>
+      <p>{text}</p>
+      <ChildOne store={store} />
+      <ChildTwo store={store} />
+      <button onClick={() => {
+        store.setState({
+          count: 1,
+          text: "world",
+        });
+      }}>change</button>
+    </>
+  );
+};
+```
+
 </details>
 
 <details>
@@ -896,10 +972,10 @@ import { useStore } from "resy";
 
 function App() {
   const { count } = store.useStore();
-
+  
   store.useSubscription(({
-    effectState, prevState, nextState,
-  }) => {
+                           effectState, prevState, nextState,
+                         }) => {
     console.log(effectState, prevState, nextState);
   }, ["count"]);
   
@@ -998,4 +1074,3 @@ function App() {
 
 ### License
 [MIT License](https://github.com/lsbFlying/resy/blob/master/LICENSE) (c) [刘善保](https://github.com/lsbFlying)
-
