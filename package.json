@@ -1,11 +1,11 @@
 {
-  "name": "resy",
+  "name": "@shein/resy",
   "version": "11.0.1-beta.0",
   "description": "React State Easy",
-  "repository": "https://github.com/lsbFlying/resy.git",
+  "repository": "https://gitlab.sheincorp.cn/npmjs/shein/resy.git",
   "author": "liushanbao <1262300490@qq.com>",
-  "homepage": "https://github.com/lsbFlying/resy",
-  "bugs": "https://github.com/lsbFlying/resy/issues",
+  "homepage": "https://gitlab.sheincorp.cn/npmjs/shein/resy",
+  "bugs": "https://gitlab.sheincorp.cn/npmjs/shein/resy/-/issues",
   "main": "index.js",
   "module": "dist/esm/index.js",
   "types": "dist/resy.d.ts",
@@ -14,9 +14,10 @@
     "dist"
   ],
   "exports": {
+    "./package.json": "./package.json",
     ".": {
       "import": {
-        "types": "./dist/resy.d.ts",
+        "types": "./dist/esm/index.d.ts",
         "node": {
           "production": "./dist/esm/resy.prod.js",
           "development": "./dist/esm/resy.js",
@@ -37,10 +38,20 @@
     "./dist/esm": {
       "import": {
         "types": "./dist/esm/index.d.ts",
+        "node": {
+          "production": "./dist/esm/resy.prod.js",
+          "development": "./dist/esm/resy.js",
+          "default": "./dist/esm/index.js"
+        },
         "default": "./dist/esm/index.js"
       },
       "module": {
         "types": "./dist/esm/index.d.ts",
+        "node": {
+          "production": "./dist/esm/resy.prod.js",
+          "development": "./dist/esm/resy.js",
+          "default": "./dist/esm/index.js"
+        },
         "default": "./dist/esm/index.js"
       },
       "default": {
@@ -51,10 +62,20 @@
     "./dist/umd": {
       "import": {
         "types": "./dist/umd/index.d.ts",
+        "node": {
+          "production": "./dist/umd/resy.prod.js",
+          "development": "./dist/umd/resy.js",
+          "default": "./dist/umd/index.js"
+        },
         "default": "./dist/umd/index.js"
       },
       "module": {
         "types": "./dist/umd/index.d.ts",
+        "node": {
+          "production": "./dist/umd/resy.prod.js",
+          "development": "./dist/umd/resy.js",
+          "default": "./dist/umd/index.js"
+        },
         "default": "./dist/umd/index.js"
       },
       "default": {
@@ -65,10 +86,20 @@
     "./dist/system": {
       "import": {
         "types": "./dist/system/index.d.ts",
+        "node": {
+          "production": "./dist/system/resy.prod.js",
+          "development": "./dist/system/resy.js",
+          "default": "./dist/system/index.js"
+        },
         "default": "./dist/system/index.js"
       },
       "module": {
         "types": "./dist/system/index.d.ts",
+        "node": {
+          "production": "./dist/system/resy.prod.js",
+          "development": "./dist/system/resy.js",
+          "default": "./dist/system/index.js"
+        },
         "default": "./dist/system/index.js"
       },
       "default": {
@@ -80,11 +111,11 @@
   "scripts": {
     "test": "vitest run --coverage --environment jsdom",
     "test:dev": "vitest --ui --coverage --environment jsdom",
-    "build": "rollup -c --configPlugin @rollup/plugin-typescript && node createEntryFile.js",
+    "build": "rollup -c --configPlugin @rollup/plugin-typescript && node create.entry.file.js",
     "prepublishOnly": "rm -rf dist coverage && npm test && npm run build"
   },
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://npmjs.sheincorp.cn/-/npmjs/"
   },
   "dependencies": {
     "use-sync-external-store": "^1.2.0"
@@ -93,6 +124,7 @@
     "react": ">=16.8.0"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.24.4",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^5.0.5",
