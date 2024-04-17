@@ -197,8 +197,10 @@ export type StoreUtils<S extends PrimitiveState> = StoreCoreUtils<S> & SetOption
 /** The type of store returned by createStore */
 export type Store<S extends PrimitiveState> = S & StoreUtils<S>;
 
+export type ConciseStoreCore<S extends PrimitiveState> = S & StoreCoreUtils<S>;
+
 export interface ConciseStoreHeart<S extends PrimitiveState> {
-  readonly store: S & StoreCoreUtils<S>;
+  readonly store: ConciseStoreCore<S>;
 }
 
 /** Return type of useConciseState */
