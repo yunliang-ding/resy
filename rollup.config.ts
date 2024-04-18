@@ -48,7 +48,7 @@ function createTsDeclareFileBuildConfig() {
     ` * (c) 2020-05-05-${curDate.getFullYear()}-${curDate.getMonth() + 1}-${curDay < 10 ? `0${curDay}` : curDay}\n` +
     " * Released under the MIT License.\n" +
     " */";
-
+  
   return modules.map(item => ({
     input,
     output: {
@@ -87,7 +87,7 @@ function createModuleBuildConfig(
      */
     cjs: "",
   };
-
+  
   const platforms = "./platform";
   const umdOutputGlobalOpts = format === "umd"
     ? {
@@ -98,11 +98,18 @@ function createModuleBuildConfig(
       },
     }
     : {};
-
+  
   const babelPlugins = format === "umd" || format === "system"
     ? []
     : [
       babel({
+        /**
+         * @description I forgot which version of "@ rollup/plugin label" requires the display
+         * of configuration extensions for compiling TS settings,
+         * and the settings to be displayed are @babel/presets-env
+         */
+        extensions: [".js", ".jsx", ".ts", ".tsx"],
+        presets: ["@babel/preset-env"],
         exclude: "node_modules/**",
         // babelHelpers: "runtime",
         babelHelpers: "bundled",
@@ -114,7 +121,6 @@ function createModuleBuildConfig(
        * And "@babel/plugin-transform-runtime" pack are placed in "devDependencies".
        * At the same time, the babel.config.js configuration in the root directory is as follows:
        * module.exports = api => {
-       *   // https://babeljs.io/docs/config-files#config-function-api
        *   api.cache(true);
        *   return {
        *     presets: [
@@ -137,16 +143,16 @@ function createModuleBuildConfig(
       //   configFile: "./babel.config.js",
       // }),
     ];
-
+  
   const terserOpts = isTerser ? [terser()] : [];
-
+  
   const suffixOpts = {
     umd: "",
     system: "",
     esm: "",
     cjs: "cjs.",
   };
-
+  
   return {
     input,
     output: {
