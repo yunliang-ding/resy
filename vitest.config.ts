@@ -6,7 +6,7 @@ export default defineConfig({
     setupFiles: "setupTests.ts",
     coverage: {
       exclude: [
-        "createEntryFile.js",
+        "create.entry.file.js",
         "index.js",
         "src/types.ts",
         "src/classConnect/types.ts",
