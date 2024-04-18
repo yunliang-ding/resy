@@ -233,10 +233,10 @@ export type PrimateForbiddenType =
 export type StateWithThisType<S extends PrimitiveState> = S extends PrimateForbiddenType
   ? never
   : S & {
-  [K in keyof S]: K extends InitialStateForbiddenKeys
-    ? never
-    : S[K];
-} & ThisType<InitialStore<S>>;
+    [K in keyof S]: K extends InitialStateForbiddenKeys
+      ? never
+      : S[K];
+  } & ThisType<InitialStore<S>>;
 
 /** Type of initialize data */
 export type InitialState<S extends PrimitiveState> = (() => StateWithThisType<S>) | StateWithThisType<S>;

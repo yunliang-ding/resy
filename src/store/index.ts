@@ -56,9 +56,9 @@ export const createStore = <S extends PrimitiveState>(
     : typeof initialState === "function"
       ? initialState()
       : initialState;
-  
+
   stateErrorProcessing(reducerState, "createStore");
-  
+
   optionsErrorProcessing(options);
   const optionsTemp = options
     ? {
@@ -66,42 +66,42 @@ export const createStore = <S extends PrimitiveState>(
       unmountRestore: options.unmountRestore ?? true,
     }
     : { unmountRestore: true };
-  
+
   const schedulerProcessor = scheduler<S>();
-  
+
   // Tag counters for data references of store
   const storeStateRefCounterMap: StateRefCounterMapType = new Map().set("counter", 0);
-  
+
   // Flag indicating that the initialStateRetrieve function is executable
   const initialFnCanExecMap: InitialFnCanExecMapType = new Map();
-  
+
   // This is the identification of whether the logical execution of the reset recovery is complete (to prevent multiple resets)
   const stateRestoreAccomplishedMap: StateRestoreAccomplishedMapType = new Map();
-  
+
   // Use Map and Set to improve performance without changing initialState, and Map and Set will be dominant in memory
   const stateMap: MapType<S> = objectToMap(reducerState);
   // Data status of the previous batch
   const prevBatchState: MapType<S> = objectToMap(reducerState);
-  
+
   // Subscription listener stack
   const listenerSet = new Set<ListenerType<S>>();
-  
+
   // The core map of store
   const storeMap: StoreMap<S> = new Map();
-  
+
   // The storage stack of this proxy object for the class component
   const classThisPointerSet = new Set<ClassThisPointerType<S>>();
-  
+
   const setState = (state: State<S> | StateFnType<S>, callback?: StateCallback<S>) => {
     willUpdatingProcessing(schedulerProcessor, prevBatchState, stateMap);
-    
+
     let stateTemp = state;
-    
+
     if (typeof state === "function") {
       // processing of prevState
       stateTemp = (state as StateFnType<S>)(mapToObject(stateMap));
     }
-    
+
     if (stateTemp !== null) {
       stateErrorProcessing(stateTemp, "setState | syncUpdate");
       // The update of hook is an independent update dispatch action, and traversal processing is needed to unify the stack.
@@ -114,27 +114,27 @@ export const createStore = <S extends PrimitiveState>(
         );
       });
     }
-    
+
     (schedulerProcessor.get("pushCallbackStack") as SchedulerType<S>["pushCallbackStack"])(
       stateMap, stateTemp as State<S>, callback,
     );
-    
+
     finallyBatchProcessing(schedulerProcessor, prevBatchState, stateMap, listenerSet);
   };
-  
+
   /**
    * @description syncUpdate primarily exists to address issues with normal text input.
    * to meet the needs of normal text input, it synchronizes React's update scheduling.
    */
   const syncUpdate = (state: State<S> | StateFnType<S>, callback?: StateCallback<S>) => {
     let stateTemp = state;
-    
+
     if (typeof state === "function") {
       stateTemp = (state as StateFnType<S>)(mapToObject(stateMap));
     }
     // Borrowing setState to synchronize the update scheduling mechanism of Resy itself.
     setState(stateTemp, callback);
-    
+
     if (stateTemp !== null) {
       batchUpdate(() => {
         Object.keys(stateTemp as NonNullable<State<S>>).forEach(key => {
@@ -150,13 +150,13 @@ export const createStore = <S extends PrimitiveState>(
       });
     }
   };
-  
+
   // Reset recovery initialization state data
   const restore = (callback?: StateCallback<S>) => {
     willUpdatingProcessing(schedulerProcessor, prevBatchState, stateMap);
-    
+
     retrieveReducerState(reducerState, initialState);
-    
+
     const state = {} as State<S>;
     mergeStateKeys(reducerState, prevBatchState).forEach(key => {
       const originValue = reducerState[key];
@@ -169,34 +169,34 @@ export const createStore = <S extends PrimitiveState>(
         );
       }
     });
-    
+
     (schedulerProcessor.get("pushCallbackStack") as SchedulerType<S>["pushCallbackStack"])(
       stateMap, state, callback,
     );
-    
+
     finallyBatchProcessing(schedulerProcessor, prevBatchState, stateMap, listenerSet);
   };
-  
+
   // Subscription function
   const subscribe = (listener: ListenerType<S>, stateKeys?: (keyof S)[]): Unsubscribe => {
     subscribeErrorProcessing(listener, stateKeys);
     const listenerWrap: ListenerType<S> = data => {
       if (effectStateInStateKeys(data.effectState, stateKeys)) listener(data);
     };
-    
+
     listenerSet.add(listenerWrap);
-    
+
     // Returns the unsubscribing function, which allows the user to choose whether or not to unsubscribe,
     // because it is also possible that the user wants the subscription to remain in effect.
     return () => listenerSet.delete(listenerWrap as ListenerType<S>);
   };
-  
+
   // Change options configuration
   const setOptions = (options: { unmountRestore: boolean }) => {
     setOptionsErrorProcessing(options);
     optionsTemp.unmountRestore = options.unmountRestore;
   };
-  
+
   // Data updates for a single attribute
   const singlePropUpdate = (key: keyof S, value: ValueOf<S>, isDelete?: boolean) => {
     willUpdatingProcessing(schedulerProcessor, prevBatchState, stateMap);
@@ -209,42 +209,42 @@ export const createStore = <S extends PrimitiveState>(
     finallyBatchProcessing(schedulerProcessor, prevBatchState, stateMap, listenerSet);
     return true;
   };
-  
+
   /**
    * @description Map for additional related internal objects of store
    * For example, some related functions or identifiers,
    * such as setState, subscribe and internal identity __REGENERATIVE_SYSTEM_KEY__
    */
   const externalMap: ExternalMapType<S> = new Map();
-  
+
   // Updated handler configuration for proxy
   const proxySetHandler = {
     set: (_: StoreMap<S>, key: keyof S, value: ValueOf<S>) => singlePropUpdate(key, value),
     // Delete will also play an updating role
     deleteProperty: (_: S, key: keyof S) => singlePropUpdate(key, undefined as ValueOf<S>, true),
   } as any as ProxyHandler<StoreMap<S>>;
-  
+
   // A proxy object with the capabilities of updating and data tracking.
   const store = new Proxy(storeMap, {
     get: (_: StoreMap<S>, key: keyof S, receiver: any) => {
       protoPointStoreErrorProcessing(receiver, store);
-      
+
       const value = stateMap.get(key);
       if (typeof value === "function") {
         // Bind to the store for the convenience of using this as well as calling some related objects in externalMap.
         return (value as AnyFn).bind(store);
       }
-      
+
       return externalMap.get(key as keyof ExternalMapValue<S>) || value;
     },
     ...proxySetHandler,
   } as any as ProxyHandler<StoreMap<S>>) as any as Store<S>;
-  
+
   // Proxy of driver update re-render for useStore
   const engineStore = new Proxy(storeMap, {
     get: (_: StoreMap<S>, key: keyof S) => {
       const value = stateMap.get(key);
-      
+
       // Error message alerting to the confusion and improper use of function property data and state,
       // which does not adhere to the hook usage convention.
       const errorMsg = `The outer function of ${key as string} is used as a hook state,`
@@ -252,7 +252,7 @@ export const createStore = <S extends PrimitiveState>(
         + " is being destructured inside useStore or useConciseState."
         + ` If the outer function of ${key as string} does not need to be used as a hook state,`
         + " then please call it directly through the store.";
-      
+
       if (typeof value === "function") {
         try {
           // Invoke a function data hook to grant the ability to update and render function data.
@@ -281,13 +281,13 @@ export const createStore = <S extends PrimitiveState>(
     },
     ...proxySetHandler,
   } as any as ProxyHandler<StoreMap<S>>);
-  
+
   externalMap.set("setState", setState);
   externalMap.set("syncUpdate", syncUpdate);
   externalMap.set("restore", restore);
   externalMap.set("subscribe", subscribe);
   externalMap.set(__REGENERATIVE_SYSTEM_KEY__, __REGENERATIVE_SYSTEM_KEY__);
-  
+
   if (optionsTemp.__useConciseStateMode__) {
     // Enable useConciseState to have data tracking capabilities through the store
     externalMap.set("store", store);
@@ -299,18 +299,18 @@ export const createStore = <S extends PrimitiveState>(
      */
     externalMap.set("setOptions", setOptions);
   }
-  
+
   /**
    * It is convenient for store.useStore() to call directly
    * 🌟 The reason why it is not changed to store.useStore
    * is due to the consideration of the rules for the use of the hook function.
    */
   const useStore = () => engineStore;
-  
+
   const useSubscription = (listener: ListenerType<S>, stateKeys?: (keyof S)[]) => {
     useSubscriptionCore(store, listener, stateKeys);
   };
-  
+
   // Connecting this pointer of the class component (therefore, this cannot be an arrow function)
   function classConnectStore(this: ClassThisPointerType<S>) {
     classThisPointerSet.add(this);
@@ -333,7 +333,7 @@ export const createStore = <S extends PrimitiveState>(
     } as any as ProxyHandler<StoreMap<S>>);
     return classEngineStore;
   }
-  
+
   // Unmount execution of class components
   function classUnmountProcessing(this: ClassThisPointerType<S>) {
     classThisPointerSet.delete(this);
@@ -343,7 +343,7 @@ export const createStore = <S extends PrimitiveState>(
       classThisPointerSet, initialState,
     );
   }
-  
+
   // The initialization function of createStore resets the recovery process for class component
   const classInitialStateRetrieve = () => {
     initialStateRetrieve(
@@ -351,7 +351,7 @@ export const createStore = <S extends PrimitiveState>(
       initialFnCanExecMap, classThisPointerSet, initialState,
     );
   };
-  
+
   externalMap.set("useStore", useStore);
   externalMap.set("useSubscription", useSubscription);
   externalMap.set(__USE_STORE_KEY__, engineStore);
@@ -365,6 +365,6 @@ export const createStore = <S extends PrimitiveState>(
   externalMap.set(__CLASS_CONNECT_STORE_KEY__, classConnectStore);
   externalMap.set(__CLASS_UNMOUNT_PROCESSING_KEY__, classUnmountProcessing);
   externalMap.set(__CLASS_INITIAL_STATE_RETRIEVE_KEY__, classInitialStateRetrieve);
-  
+
   return store;
 };
